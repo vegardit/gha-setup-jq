@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: © Vegard IT GmbH (https://vegardit.com) and contributors
+# SPDX-FileContributor: Sebastian Thomschke, Vegard IT GmbH
+# SPDX-License-Identifier: Apache-2.0
+#
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+name: Build
+
+on:
+  push:
+    branches:
+    - '**'
+    tags-ignore:
+    - '**'
+    paths-ignore:
+    - '**/*.md'
+    - '.github/*.yml'
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-latest
+        - macos-latest
+        - windows-latest
+
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v3 #https://github.com/actions/checkout
+
+    - name: Install jq '1.5''
+      id: install-jq-1_5
+      uses: ./
+      with:
+        version: 1.5
+
+    - name: Test jq '1.5''
+      run: |
+        set -euxo pipefail
+        jq --version
+        echo '{ "greeting": "Hello World!" }' | jq .greeting
+        [[ '${{ steps.install-jq-1_5.outputs.version }}' == '1.5' ]]
+
+    - name: Install jq 'any'
+      id: install-jq-any
+      uses: ./
+
+    - name: Test jq 'any'
+      run: |
+        set -euxo pipefail
+        jq --version
+        echo '{ "greeting": "Hello World!" }' | jq .greeting
+        [[ '${{ steps.install-jq-any.outputs.version }}' == '1.5' ]]
+
+    - name: Install jq 'latest'
+      id: install-jq-latest
+      uses: ./
+      with:
+        version: latest
+
+    - name: Test jq 'latest'
+      run: |
+        set -euxo pipefail
+        jq --version
+        echo '{ "greeting": "Hello World!" }' | jq .greeting
+        [[ '${{ steps.install-jq-latest.outputs.version }}' != '1.5' ]]
