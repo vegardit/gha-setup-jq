@@ -30,25 +30,26 @@ jobs:
       matrix:
         os:
         - ubuntu-latest
-        - macos-latest
+        - macos-12     # x64
+        - macos-latest # ARM 
         - windows-latest
 
     steps:
     - name: Git Checkout
       uses: actions/checkout@v4 #https://github.com/actions/checkout
 
-    - name: Install jq '1.5''
-      id: install-jq-1_5
+    - name: Install jq '1.7'
+      id: install-jq-1_7
       uses: ./
       with:
-        version: 1.5
+        version: 1.7
 
-    - name: Test jq '1.5''
+    - name: Test jq '1.7'
       run: |
         set -euxo pipefail
         jq --version
         echo '{ "greeting": "Hello World!" }' | jq .greeting
-        [[ '${{ steps.install-jq-1_5.outputs.version }}' == '1.5' ]]
+        [[ '${{ steps.install-jq-1_7.outputs.version }}' == '1.7' ]]
 
     - name: Install jq 'any'
       id: install-jq-any
@@ -59,7 +60,7 @@ jobs:
         set -euxo pipefail
         jq --version
         echo '{ "greeting": "Hello World!" }' | jq .greeting
-        [[ '${{ steps.install-jq-any.outputs.version }}' == '1.5' ]]
+        [[ '${{ steps.install-jq-any.outputs.version }}' == '1.7' ]]
 
     - name: Install jq 'latest'
       id: install-jq-latest
@@ -72,4 +73,4 @@ jobs:
         set -euxo pipefail
         jq --version
         echo '{ "greeting": "Hello World!" }' | jq .greeting
-        [[ '${{ steps.install-jq-latest.outputs.version }}' != '1.5' ]]
+        [[ '${{ steps.install-jq-latest.outputs.version }}' != '1.7' ]]

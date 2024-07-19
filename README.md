@@ -14,7 +14,7 @@
 
 ## <a name="what-is-it"></a>What is it?
 
-**gha-setup-jq** is a GitHub action to install the [jq](https://github.com/stedolan/jq) command-line JSON parser/processor.
+**gha-setup-jq** is a GitHub action to install the [jq](https://github.com/jqlang/jq) command-line JSON parser/processor.
 
 
 ## <a name="github_action"></a>Usage

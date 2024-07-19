@@ -29,7 +29,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-  
+
     ##################################################
     # Setup Cache
     ##################################################
@@ -58,11 +58,11 @@ runs:
         function get_installed_version() {
           "${1:-$app_home/$app_target_bin}" --version | cut -d- -f2
         }
-        
+
         INPUTS_VERSION_LOWERCASE="$(tr '[:upper:]' '[:lower:]' <<<"$INPUTS_VERSION")"
-        
+
         if [[ $INPUTS_VERSION_LOWERCASE == 'any' ]] && hash jq &>/dev/null; then
-        
+
           # set outputs
           echo "need_cache_update=false" | tee -a "$GITHUB_OUTPUT"
           case "$RUNNER_OS" in
@@ -70,17 +70,17 @@ runs:
             *)       echo "path=$(which jq)" | tee -a "$GITHUB_OUTPUT" ;;
           esac
           echo "version=$(get_installed_version "$(which jq)")" | tee -a "$GITHUB_OUTPUT"
-        
+
         else
-        
-          APP_REPO_ROOT=https://github.com/stedolan/jq
-        
+
+          APP_REPO_ROOT=https://github.com/jqlang/jq
+
           case "$RUNNER_OS" in
             macOS)
               app_home="$RUNNER_TEMP/jq"
               app_target_bin=jq
               case "$(machine)" in
-                *arm*) echo "ERROR: Unsupported architecture $(machine)"; exit 1 ;;
+                *arm*) app_source_bin='jq-macos-arm64' ;;
                     *) app_source_bin='jq-osx-amd64' ;;
               esac
               ;;
@@ -99,26 +99,32 @@ runs:
               app_source_bin='jq-win64.exe'
               ;;
           esac
-        
+
           echo "app_home: $app_home"
           echo "app_source_bin: $app_source_bin"
           echo "app_target_bin: $app_target_bin"
-        
+
           function get_latest_version() {
-            curl -sSfL --max-time 5 -o /dev/null -w '%{url_effective}' $APP_REPO_ROOT/releases/latest | grep -o '[^/]*$' | cut -d- -f2
+            # temporary workaround for https://github.com/curl/curl/issues/13845
+            if [[ $RUNNER_OS == "Windows" ]]; then
+              (set -x; powershell -Command "(Invoke-WebRequest -Uri '$APP_REPO_ROOT/releases/latest' -Method Head -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing).Headers.Location" | grep -o '[^/]*$' | cut -d- -f2)
+              return
+            fi
+
+            (set -x; curl -sSfL --max-time 5 -o /dev/null -w '%{url_effective}' $APP_REPO_ROOT/releases/latest | grep -o '[^/]*$' | cut -d- -f2)
           }
-        
+
           app_downloaded=false
-        
+
           function download_app() {
             app_download_url="$APP_REPO_ROOT/releases/download/jq-$1/$app_source_bin"
             echo "Downloading [$app_download_url]..."
             mkdir -p "$app_home"
-            curl -fsSL --max-time 10 --retry 3 --retry-delay 5 -o "$app_home/$app_target_bin" "$app_download_url"
+            (set -x; curl -fsSL --max-time 10 --retry 3 --retry-delay 5 -o "$app_home/$app_target_bin" "$app_download_url")
             chmod 777 "$app_home/$app_target_bin"
             app_downloaded=true
           }
-        
+
           case "$INPUTS_VERSION_LOWERCASE" in
             any)
               if [[ ! -f "$app_home/$app_target_bin" ]]; then
@@ -146,9 +152,9 @@ runs:
               fi
               ;;
           esac
-        
+
           echo "$RUNNER_TEMP/jq" >> "$GITHUB_PATH"
-        
+
           # prepare cache update
           if [[ $INPUTS_USE_CACHE == 'true' && ${ACT:-} != 'true' ]]; then # $ACT is set when running via nektos/act
             if [[ $app_downloaded == 'true' ]]; then
@@ -163,7 +169,7 @@ runs:
           else
             need_cache_update=false
           fi
-        
+
           # set outputs
           echo "need_cache_update=$need_cache_update" | tee -a "$GITHUB_OUTPUT"
           case "$RUNNER_OS" in
@@ -171,7 +177,7 @@ runs:
             *)       echo "path=$app_home/$app_target_bin" | tee -a "$GITHUB_OUTPUT" ;;
           esac
           echo "version=$(get_installed_version)" | tee -a "$GITHUB_OUTPUT"
-        
+
         fi
         echo '::endgroup::'
 
