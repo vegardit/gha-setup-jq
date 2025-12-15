@@ -8,7 +8,7 @@
 **Feedback and high-quality pull requests are highly welcome!**
 
 1. [What is it?](#what-is-it)
-1. [Usage](#github_action)
+1. [Usage](#usage)
 1. [License](#license)
 
 
@@ -17,9 +17,9 @@
 **gha-setup-jq** is a GitHub action to install the [jq](https://github.com/jqlang/jq) command-line JSON parser/processor.
 
 
-## <a name="github_action"></a>Usage
+## <a name="usage"></a>Usage
 
-In your GitHub actions workflow specify:
+In your GitHub Actions workflow specify:
 
 ### Installing the latest version:
 
@@ -52,7 +52,7 @@ jobs:
       uses: vegardit/gha-setup-jq@v1
       with:
         use-cache: true
-        version: 4.30.6
+        version: 1.18.1
 
     - name: Use jq
       run: |
