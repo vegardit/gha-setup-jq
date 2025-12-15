@@ -39,7 +39,7 @@ runs:
       uses: actions/cache/restore@v4 # https://github.com/actions/cache/tree/main/restore
       with:
         path: ${{ runner.temp }}/jq
-        key: ${{ runner.os }}-jq-${{ inputs.version }}
+        key: ${{ runner.os }}-${{ runner.arch }}-jq-${{ inputs.version }}
 
     ##################################################
     # Install jq
@@ -88,9 +88,10 @@ runs:
               app_home="$RUNNER_TEMP/jq"
               app_target_bin=jq
               case $(uname -m) in # https://stackoverflow.com/questions/45125516/possible-values-for-uname-m
-                i386|i686) app_source_bin='jq-linux32' ;;
-                   x86_64) app_source_bin='jq-linux64' ;;
-                        *) echo "ERROR: Unsupported architecture $(uname -m)"; exit 1 ;;
+                    i386|i686) app_source_bin='jq-linux32' ;;
+                       x86_64) app_source_bin='jq-linux64' ;;
+                aarch64|arm64) app_source_bin='jq-linux-arm64' ;;
+                            *) echo "ERROR: Unsupported architecture $(uname -m)"; exit 1 ;;
               esac
               ;;
             Windows)
@@ -183,7 +184,7 @@ runs:
 
     - name: 'jq: cache update'
       uses: actions/cache/save@v4
-      if: ${{ steps.YQ-SETUP.outputs.need_cache_update == 'true' }}
+      if: ${{ steps.JQ-SETUP.outputs.need_cache_update == 'true' }}
       with:
         path: ${{ runner.temp }}/jq
         key: ${{ steps.JQ-CACHE.outputs.cache-primary-key }}
